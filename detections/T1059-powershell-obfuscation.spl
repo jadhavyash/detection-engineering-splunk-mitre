@@ -1,0 +1,16 @@
+| SPL Detection Rule — T1059.001: PowerShell Obfuscation
+| MITRE: Execution | Severity: High | Author: Yash Jadhav
+| Prerequisite: Enable Script Block Logging via GPO (Event ID 4104)
+
+index=windows EventCode=4104
+| eval obfuscated=if(match(ScriptBlockText,
+    "-[Ee][Nn][Cc]|IEX|Invoke-Expression|FromBase64String"),"YES","NO")
+| where obfuscated="YES"
+| eval score=0
+| eval score=score+if(match(ScriptBlockText,"-enc"),3,0)
+| eval score=score+if(match(ScriptBlockText,"IEX|Invoke-Expression"),2,0)
+| eval score=score+if(match(ScriptBlockText,"FromBase64String"),2,0)
+| eval score=score+if(match(ScriptBlockText,"DownloadString|WebClient"),2,0)
+| eval severity=case(score>=5,"HIGH",score>=2,"MEDIUM",true(),"LOW")
+| table _time, ComputerName, UserName, score, severity, ScriptBlockText
+| sort -score

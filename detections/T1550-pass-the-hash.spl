@@ -1,0 +1,14 @@
+| SPL Detection Rule — T1550.002: Pass-the-Hash
+| MITRE: Lateral Movement | Severity: Critical | Author: Yash Jadhav
+| Key: LogonType=3 + NTLM + KeyLength=0 + SubjectUserName="-" = PtH fingerprint
+
+index=windows EventCode=4624 LogonType=3
+| where AuthenticationPackageName="NTLM" AND KeyLength=0
+| eval pth_indicator=if(match(SubjectUserName,"-") AND SubjectLogonId="0x0","LIKELY_PTH","REVIEW")
+| stats count as logon_count, dc(TargetUserName) as unique_targets,
+    values(TargetUserName) as targeted_accounts,
+    min(_time) as first_seen, max(_time) as last_seen
+    by IpAddress, WorkstationName, pth_indicator
+| where pth_indicator="LIKELY_PTH"
+| eval severity="CRITICAL"
+| sort -logon_count

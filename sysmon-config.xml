@@ -1,0 +1,23 @@
+<!-- Minimal Sysmon config for Detection Engineering Lab
+     Install: sysmon64.exe -accepteula -i sysmon-config.xml
+     Author: Yash Jadhav -->
+<Sysmon schemaversion="4.82">
+  <HashAlgorithms>md5,sha256,IMPHASH</HashAlgorithms>
+  <EventFiltering>
+    <!-- EventCode 8 CreateRemoteThread - T1055 -->
+    <RuleGroup name="CreateRemoteThread" groupRelation="or">
+      <CreateRemoteThread onmatch="include">
+        <TargetImage condition="is">C:\Windows\System32\lsass.exe</TargetImage>
+        <TargetImage condition="is">C:\Windows\explorer.exe</TargetImage>
+      </CreateRemoteThread>
+    </RuleGroup>
+    <!-- EventCode 10 ProcessAccess - T1003 + T1055 -->
+    <RuleGroup name="ProcessAccess" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="is">C:\Windows\System32\lsass.exe</TargetImage>
+        <GrantedAccess condition="is">0x1fffff</GrantedAccess>
+        <GrantedAccess condition="is">0x143a</GrantedAccess>
+      </ProcessAccess>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>
